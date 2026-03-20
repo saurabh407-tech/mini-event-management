@@ -1,0 +1,145 @@
+openapi: 3.0.0
+info:
+  title: Mini Event Management System
+  version: 1.0.0
+  description: API for browsing events and booking tickets
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /events:
+    get:
+      summary: List all upcoming events
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+    post:
+      summary: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventBody'
+      responses:
+        '201':
+          description: Event created successfully
+        '400':
+          description: Validation error
+
+  /bookings:
+    post:
+      summary: Book a ticket for a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingBody'
+      responses:
+        '201':
+          description: Booking confirmed with unique code
+        '400':
+          description: No tickets available
+        '404':
+          description: Event not found
+
+  /users/{id}/bookings:
+    get:
+      summary: Get all bookings by a user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of user bookings
+
+  /events/{id}/attendance:
+    post:
+      summary: Mark attendance using booking code
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: EVT-AB12CD34
+      responses:
+        '200':
+          description: Attendance marked successfully
+        '400':
+          description: Attendance already marked
+        '404':
+          description: Invalid code
+
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        date:
+          type: string
+          format: date-time
+        total_capacity:
+          type: integer
+        remaining_tickets:
+          type: integer
+
+    CreateEventBody:
+      type: object
+      required: [title, date, total_capacity]
+      properties:
+        title:
+          type: string
+          example: Tech Conference 2025
+        description:
+          type: string
+          example: Annual tech summit
+        date:
+          type: string
+          format: date-time
+          example: "2025-08-15T10:00:00Z"
+        total_capacity:
+          type: integer
+          example: 100
+
+    CreateBookingBody:
+      type: object
+      required: [user_id, event_id]
+      properties:
+        user_id:
+          type: integer
+          example: 1
+        event_id:
+          type: integer
+          example: 1
